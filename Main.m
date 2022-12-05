@@ -5,9 +5,6 @@
 % wrapping object optimization
 % put in opensim get moment arm 
 
-
-
-
 for y = 1:15
 
 [s, o] = sortrows(Data.(trial(y)),Data.(trial(y))(:,1));
