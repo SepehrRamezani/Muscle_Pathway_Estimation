@@ -11,7 +11,7 @@ c=append(basepath,'\key_exp19_p7.xlsx');
 m = 1;
 y = {'A';'C';'D';'H';'J';'K';'O';'Q';'R';'V';'X';'Y';'AC';'AE';'AF';'AJ';'AL';'AM';'AQ';'AS';'AT';'AX';'AZ';'BA';'BE';'BG';'BH'};
 u = [0;30;60;90;110;];
-
+% key = [farmesUS framesMococ fpsUS]
 key = zeros(45,3);
 key = xlsread(c, 'Sheet1', 'A2:C46');
 
@@ -36,11 +36,11 @@ for i = 1:5
         
         %for each trial
         for k = 1:3
-            % ##i = 2;
-            % ##j = 1;
-            % ##k = 3;
-            % ##m = 7;
-            % ##w = 12;
+            % i = 2;
+            % j = 1;
+            % k = 3;
+            % m = 7;
+            % w = 12;
             %moco spreadsheet location
             d = append(q,'K',ka{i},'_',aa{j},'_L_',mat2str(k),'.xlsx');
             
