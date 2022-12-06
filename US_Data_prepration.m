@@ -35,7 +35,7 @@ for K=1:length(Knee)
             Us_Data_cell_trimed=[Us_Data_cell{[r(1)+1:rs],[c(counter):c(counter)+Us_Data_size(2)-1]}];
             Us_Data_cell_trimed_reshaped=reshape(Us_Data_cell_trimed,Us_Data_size);
             Us_Data_Mat= rmmissing(Us_Data_cell_trimed_reshaped);
-            Data.(fname).data=[Us_Data_Mat(:,1)./Data.(fname).FPS Us_Data_Mat(:,[2,3])] ;
+            Data.(fname).data=[Us_Data_Mat(:,1)./Data.(fname).FPS Us_Data_Mat(:,[3,4])] ;
             Datalabel=append(MuscleName,"_",Knee(K),"_",Ankle(A),"_L_",Trial(T));
             Data.trials=[Data.trials, Datalabel];
         end
