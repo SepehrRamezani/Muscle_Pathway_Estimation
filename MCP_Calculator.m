@@ -1,7 +1,7 @@
 clear all
 import org.opensim.modeling.*;
-myLog = JavaLogSink();
-Logger.addSink(myLog);
+% myLog = JavaLogSink();
+% Logger.addSink(myLog);
 Pardata=importdata('C:\MyCloud\GitHub\AddresseforMusclepathwayproject.txt');
 Basepath=Pardata{1};
 load([Basepath '\US_raw.mat']);
@@ -20,20 +20,23 @@ for K=1:length(Knee)
             model=Model(append(Trc_path,subject,"\","exp19_p7_raj.osim"));
             analysis = AnalyzeTool();           
             motion = Storage(append(motiondir,fname,'_Combined.mot'));
+            Stime=motion.getFirstTime();
+%             Etime=motion.getLastTime();
+            Etime=19;
             analysis.setName(fname);
             analysis.setModel(model);
-            analysis.setModelFilename("p7/exp19_p7_raj.osim");
+            analysis.setModelFilename(append(Trc_path,subject,"/exp19_p7_raj.osim"));
             analysis.setCoordinatesFileName(append(motiondir,fname,'_Combined.mot'));             
-            analysis.setInitialTime(motion.getFirstTime());
-            analysis.setFinalTime(motion.getLastTime());
+            analysis.setInitialTime(Stime);
+            analysis.setFinalTime(Etime);
             analysis.setResultsDir(append(Trc_path,"..\Mucle_Center\",fname,"_MuscleCenter"));
             endkinematic=PointKinematics(model);
             endkinematic.setBody(model.getBodySet.get('Muscle_C'));
             endkinematic.setRelativeToBody(model.getBodySet.get('tibia_l'))
             endkinematic.setPointName('MUCE');
             endkinematic.setPoint(Vec3(0,0,0))
-            endkinematic.setStartTime(motion.getFirstTime())
-            endkinematic.setEndTime(motion.getLastTime())
+            endkinematic.setStartTime(Stime)
+            endkinematic.setEndTime(Etime)
             analysis.updAnalysisSet().adoptAndAppend(endkinematic());
             analysis.print(append(Trc_path,"Analyze_Setup.xml"));
             analysis1 = AnalyzeTool(append(Trc_path,"Analyze_Setup.xml"));
