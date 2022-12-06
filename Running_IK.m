@@ -1,31 +1,34 @@
-% input trc out mot
-clear all
+function Running_IK(Data)
 import org.opensim.modeling.*;
-% myLog = JavaLogSink();
-% Logger.addSink(myLog);
-Pardata=importdata('C:\MyCloud\GitHub\AddresseforMusclepathwayproject.txt');
-Basepath=Pardata{1};
+myLog = JavaLogSink();
+Logger.addSink(myLog);
+Basepath=Data.Basepath;
 load([Basepath '\US_raw.mat']);
-Trc_path=append(Basepath,'\Moca\p7\');
-Knee = ["K0","K30","K60","K90","K110"];
-Ankle = ["0","D10","P30"];
-Trial = ["1","2","3"];
+Knee=Data.Knee;
+Ankle=Data.Ankle;
+Trial=Data.Trial;
+Subject=Data.Subject;
 Data.trial=[];
+for S=1:length(Subject) 
+    Trc_path=append(Data.Basepath,'\Moca\',Subject,'\');
 for K=1:length(Knee)
     for A=1:length(Ankle)
-        for T=2:length(Trial)
+        for T=1:length(Trial)
             fname=append(Knee(K),"_",Ankle(A),"_L_",Trial(T));
             us=Data.(fname).data;
-            model=Model(append(Trc_path,"exp19_p7_raj.osim"));
+            model=Model(append(Trc_path,Subject,"_raj.osim"));
             ikTool=InverseKinematicsTool(append(Trc_path,'..\IK_Setup1.xml'));
             ikTool.setModel(model);
             ikTool.setMarkerDataFileName(append(Trc_path,fname,"_Marker.trc"));
             ikTool.setStartTime(us(1,1));
-            ikTool.setEndTime(us(19,1));
+            ikTool.setEndTime(19);
             ikTool.setOutputMotionFileName(append(Trc_path,fname,"_IK.mot"));     
             ikTool.print(append(Trc_path,"..\IK_Setup.xml"));
             ikTool.run();
 
         end
     end
+end
+end
+Logger.removeSink(myLog);
 end
