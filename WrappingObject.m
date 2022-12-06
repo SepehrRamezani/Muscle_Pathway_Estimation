@@ -1,11 +1,7 @@
 clear all
 Pardata=importdata('C:\MyCloud\GitHub\AddresseforMusclepathwayproject.txt');
 Basepath=Pardata{1};
-
 Trc_path=append(Basepath);
-
-% wrapping object optimization
-% put in opensim get moment arm 
 subject=["p7"];
 Knee = ["K0","K30","K60","K90","K110"];
 Ankle = ["0","D10","P30"];
@@ -29,7 +25,6 @@ for K=1:length(Knee)
         % For visualizing purpose the x data is flipped 
         MCP_XYZ_Data_Combined=-1*MCP_XYZ_Data_Combined;
         [MCP_XYZ_Sorted, o] = sortrows(MCP_XYZ_Data_Combined,2);
-%         MCP_XYZ_Sorted(:,1)=-1*MCP_XYZ_Sorted(:,1);
         [coef,S] = polyfit(MCP_XYZ_Sorted(:,2),MCP_XYZ_Sorted(:,1), 3);
         curve_x=MCP_XYZ_Sorted(1,2):(MCP_XYZ_Sorted(end,2)-MCP_XYZ_Sorted(1,2))/50:MCP_XYZ_Sorted(end,2);
         cruve_y=polyval(coef,curve_x,S);
@@ -50,54 +45,6 @@ for K=1:length(Knee)
     end
 end
 save([Basepath '\MCP_data.mat'],'Data');
-count = 1;
-colors = distinguishable_colors(15);
-Knee = {'K000','K030','K060','K090','K110'};
-Ankle = {'000','D10','P30'};
-Trial = {'1','2','3'};
-% figure
-% hold on
-% plot(Data.Laterals0(:,2),ye, 'Linewidth',2, 'DisplayName','Combined')
-for K=1:length(Knee)
-    for A=1:length(Ankle)
-        figure
-        hold on
-        for T=1:length(Trial)
-            x = Data.(strcat(Knee{K},"_",Ankle{A},"_L_",Trial{T}))(:,2);
-            y = Data.(strcat(Knee{K},"_",Ankle{A},"_L_",Trial{T}))(:,1);
-            plot(-1*x{:,1}, -1*y{:,1}, 'DisplayName',strcat(Knee{K},"_",Ankle{A},"_L_",Trial{T}), 'color', colors(count,:))
-%             plot(x{:,1}, y{:,1}, 'DisplayName',strcat(Knee{K},"_",Ankle{A},"_L_",Trial{T}), 'color', colors(count,:))
-        end
-        ye = CurveFun(Wrapping_param(count,:), Data.(strcat("Laterals",trial{count}))(:,2));
-        plot(Data.(strcat("Laterals",trial{count}))(:,2), ye)
-        xlim([0 0.35])
-        ylim([0 0.16])
-        hold off
-        count = count + 1;
-    end
-end
-count = 1;
-figure
-hold on
-for K=1:length(Knee)
-    for A=1:length(Ankle)
-        for T=1:length(Trial)
-            x = Data.(strcat(Knee{K},"_",Ankle{A},"_L_",Trial{T}))(:,2);
-            y = Data.(strcat(Knee{K},"_",Ankle{A},"_L_",Trial{T}))(:,1);
-            plot(-1*x{:,1}, -1*y{:,1}, 'DisplayName',strcat(Knee{K},"_",Ankle{A},"_L_",Trial{T}), 'color', colors(count,:))
-%           plot(x{:,1}, y{:,1}, 'DisplayName',strcat(Knee{K},"_",Ankle{A},"_L_",Trial{T}), 'color', colors(count,:))
-        end      
-        count = count + 1;
-    end
-end
-xlim([0 0.35])
-ylim([0 0.16])
-hold off
-% plot(Data.Laterals0(:,2), poly,'Linewidth',2,'DisplayName','Polynomial Fit to Data')
-% legend
-% hold off
-
-
 function sse = sseval(parm,xdata,ydata)
 A = parm(1);
 B = parm(2);

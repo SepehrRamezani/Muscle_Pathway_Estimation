@@ -53,3 +53,4 @@ for K=1:length(Knee)
         Data.(fcoboname).Momentarm=Momentarm;
     end
 end
+save([Basepath '\Final_data.mat'],'Data');
