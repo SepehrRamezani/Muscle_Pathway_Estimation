@@ -33,7 +33,6 @@ for S=1:length(Subject)
             ubx = (-1*coef(2))/(3*coef(1));
             lbx = 0.03;
             MCP_XYZ_trimed=MCP_XYZ_Sorted(MCP_XYZ_Sorted(:,2)<=ubx & MCP_XYZ_Sorted(:,2)>=lbx,:);
-            
             %         polyval(coef,x,S);
             fun = @(w)sseval(w,MCP_XYZ_trimed(:,2),MCP_XYZ_trimed(:,1));
             x0 = [0.1;0.1;-0.05];
