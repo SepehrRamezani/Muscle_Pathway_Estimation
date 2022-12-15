@@ -31,11 +31,10 @@ for S=1:length(Subject)
                 Us_Data_cell_trimed_reshaped=reshape(Us_Data_cell_trimed,Us_Data_size);
                 Us_Data_Mat= rmmissing(Us_Data_cell_trimed_reshaped);
                 Data.(fname).data=[Us_Data_Mat(:,1)./Data.(fname).FPS Us_Data_Mat(:,[3,4])] ;
-                Datalabel=append(Knee(K),"_",Ankle(A),"_L_",Trial(T));
-                Data.trialslable=[Data.trialslable, Datalabel];
             end
         end
     end
 end
+fprintf('US prepration done ...');
 save([Basepath '\US_raw.mat'],'Data');
 end

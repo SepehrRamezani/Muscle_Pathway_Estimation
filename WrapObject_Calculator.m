@@ -1,12 +1,11 @@
-function WrapObject_Calculator(Data)
-Basepath=Data.Basepath;
-Data.trial=[];
+function WrapObject_Calculator(refData)
+Basepath=refData.Basepath;
 MCP_XYZ_Data_Combined=[];
 counter=0;
-Ankle=Data.Ankle;
-Knee=Data.Knee;
-Trial=Data.Trial;
-Subject=Data.Subject;
+Ankle=refData.Ankle;
+Knee=refData.Knee;
+Trial=refData.Trial;
+Subject=refData.Subject;
 for S=1:length(Subject)
     for K=1:length(Knee)
         for Ank=1:length(Ankle)
@@ -37,13 +36,24 @@ for S=1:length(Subject)
             fun = @(w)sseval(w,MCP_XYZ_trimed(:,2),MCP_XYZ_trimed(:,1));
             x0 = [0.1;0.1;-0.05];
             options = optimset('MaxFunEvals',100000,'MaxIter',100000,'TolFun',1e-10);
-            Wrapping_param(counter,:) = fminsearch(fun,x0,options);
+            [Wrapping_param(counter,:),fval,exitflag] = fminsearch(fun,x0,options);
+            r=Wrapping_param(counter,1);
+            y=Wrapping_param(counter,2);
+            x=Wrapping_param(counter,3);
+            if exitflag
+                fprintf('Wrap Object parameters of %s is r=%3.4f y=%3.4f x=%3.4f \n',fname,r,y,x);
+            else
+                fprintf('Wrap Object of %s has not found best answer is r=%3.4f y=%3.4f x=%3.4f \n',fname,r,y,x);
+                Wrapping_ydata=CurveFun(Wrapping_param(counter,:),MCP_XYZ_trimed(:,2));
+                plot(MCP_XYZ_trimed(:,2),[MCP_XYZ_trimed(:,1),Wrapping_ydata])
+            end
             Data.(fcoboname).WrappingPar = Wrapping_param(counter,:);
-            Wrapping_ydata=CurveFun(Wrapping_param(counter,:),MCP_XYZ_trimed(:,2));
+            
         end
     end
 end
 save([Basepath '\MCP_data.mat'],'Data');
+
     function sse = sseval(parm,xdata,ydata)
         A = parm(1);
         B = parm(2);

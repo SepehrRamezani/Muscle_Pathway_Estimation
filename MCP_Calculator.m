@@ -1,7 +1,5 @@
 function MCP_Calculator(Data)
 import org.opensim.modeling.*;
-myLog = JavaLogSink();
-Logger.addSink(myLog);
 Basepath=Data.Basepath;
 motionbasedir=append(Basepath,'\Moca\');
 Data.trial=[];
@@ -39,6 +37,7 @@ for S=1:length(Subject)
                 analysis.print(append(motionbasedir,"Analyze_Setup.xml"));
                 analysis1 = AnalyzeTool(append(motionbasedir,"Analyze_Setup.xml"));
                 analysis1.run();
+                fprintf('MCP of %s is done \n',fname);
             end
         end
     end

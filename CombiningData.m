@@ -26,15 +26,12 @@ for S=1:length(Subject)
                 F_fnames = append(fname,'_Combined.mot');
                 Datafolder = append(Mocadir);
                 delimiterIn = '\t';
-                Dataheadermotion=[];
-                for l=1:length(Moca_data.colheaders)
-                  Dataheadermotion=[Dataheadermotion char(Moca_data.colheaders(l)) delimiterIn] ; 
-                end
+%                 Dataheadermotion=[{"time"} Moca_data.colheaders];
                 Title='version=1\nnRows=%d\nnColumns=%d\ninDegrees=yes\nendheader\n';
                 [r,c] = size(combined_Data);
                 Titledata = [r,c];
                 MDatadata = combined_Data;
-                makefile(Datafolder,F_fnames,Title,Titledata,Dataheadermotion,MDatadata,5,delimiterIn);
+                makefile(Datafolder,F_fnames,Title,Titledata,Moca_data.colheaders,MDatadata,5,delimiterIn);
                 disp(F_fnames)
             end
         end
