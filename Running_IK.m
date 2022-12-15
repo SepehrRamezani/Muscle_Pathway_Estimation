@@ -1,7 +1,5 @@
 function Running_IK(Data)
 import org.opensim.modeling.*;
-myLog = JavaLogSink();
-Logger.addSink(myLog);
 Basepath=Data.Basepath;
 load([Basepath '\US_raw.mat']);
 Knee=Data.Knee;
@@ -21,7 +19,7 @@ for K=1:length(Knee)
             ikTool.setModel(model);
             ikTool.setMarkerDataFileName(append(Trc_path,fname,"_Marker.trc"));
             ikTool.setStartTime(us(1,1));
-            ikTool.setEndTime(19);
+            ikTool.setEndTime(us(1,end));
             ikTool.setOutputMotionFileName(append(Trc_path,fname,"_IK.mot"));     
             ikTool.print(append(Trc_path,"..\IK_Setup.xml"));
             ikTool.run();
@@ -30,5 +28,4 @@ for K=1:length(Knee)
     end
 end
 end
-Logger.removeSink(myLog);
 end
