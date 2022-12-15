@@ -15,7 +15,9 @@ for K=1:length(Knee)
             markdatastruct = c3d_getdata(char(fullfile(Trc_path,append(fname,"_edited.c3d"))), 0);
             Markerset=fieldnames(markdatastruct.marker_data.Markers);
             Markerset=Markerset(~contains(Markerset,'C_'));
-            Markerset=markercheck(Markerset);
+            if (contains(Markerset,"US5")&contains(Markerset,"US4"))
+                markdatastruct=marker_check(markdatastruct);
+            end
             MarkerData=[markdatastruct.marker_data.Time];
             for i = 1:length(Markerset)
                 MarkerData =[MarkerData markdatastruct.marker_data.Markers.(Markerset{i})];
@@ -24,7 +26,6 @@ for K=1:length(Knee)
             markdatastruct.marker_data.Info.Filename=erase(markdatastruct.marker_data.Info.Filename,'_edited');
             generate_Marker_Trc(Markerset,MarkerData,markdatastruct.marker_data.Info);
         end
-%%% Remove Extra Markers
     end
 end
 end
