@@ -13,13 +13,14 @@ for K=1:length(Knee)
     for A=1:length(Ankle)
         for T=1:length(Trial)
             fname=append(Knee(K),"_",Ankle(A),"_L_",Trial(T));
-            us=Data.(fname).data;
-            model=Model(append(Trc_path,Subject,"_raj.osim"));
+            motion = Storage(append(Trc_path,fname,"_Marker.trc"));
+%             us=Data.(fname).data;
+            model=Model(append(Trc_path,Subject,"_raj_act1.osim"));
             ikTool=InverseKinematicsTool(append(Trc_path,'..\IK_Setup1.xml'));
             ikTool.setModel(model);
             ikTool.setMarkerDataFileName(append(Trc_path,fname,"_Marker.trc"));
-            ikTool.setStartTime(us(1,1));
-            ikTool.setEndTime(us(1,end));
+            ikTool.setStartTime(motion.getFirstTime ());
+            ikTool.setEndTime(motion.getLastTime());
             ikTool.setOutputMotionFileName(append(Trc_path,fname,"_IK.mot"));     
             ikTool.print(append(Trc_path,"..\IK_Setup.xml"));
             ikTool.run();
