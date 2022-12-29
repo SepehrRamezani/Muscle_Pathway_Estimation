@@ -7,6 +7,9 @@ Trial=filedata.Trial;
 Subject=filedata.Subject;
 filedata.trial=[];
 newFPS=20;
+RMatrix=[0 0 1; ...
+    1 0 0; ...
+    0 1 0];
 
 for S=1:length(Subject) 
     Trc_path=append(filedata.Basepath,'\Moca\',Subject,'\');
@@ -23,8 +26,8 @@ for K=1:length(Knee)
             end
             MarkerData=[markdatastruct.marker_data.Time(1:jupdata:end)];
             for i = 1:length(Markerset)
-                RawMarker=markdatastruct.marker_data.Markers.(Markerset{i});
-                [bb,aa] = butter(4, 0.05,'low');
+                RawMarker=markdatastruct.marker_data.Markers.(Markerset{i})*RMatrix;
+                [bb,aa] = butter(2, 0.05,'low');
                 %     datafilt=filtfilt(bb,aa,MTable(:,5));
 %                 offset=rawmarker(1,:);
                 MarerDatafilt=filtfilt(bb,aa,RawMarker);
