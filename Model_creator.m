@@ -4,7 +4,7 @@ Basepath=Pardata{1};
 import org.opensim.modeling.*;
  myLog = JavaLogSink();
 Logger.addSink(myLog);
-Subject="p7";
+Subject="p1";
 %% name of joints bodies and muscles
 whichleg="l";
 Weldjoints=["mtp","subtalar"];
@@ -18,7 +18,7 @@ Bodies(4:end)=addingleg(Bodies(4:end),whichleg);
 
 %%
 Trc_path=append(Basepath,'\Moca\',Subject,'\');
-model=Model(append(Trc_path,Subject,"_raj_act.osim"));
+model=Model(append(Trc_path,Subject,"_raj.osim"));
 
 % model.print(append(Trc_path,Subject,"_raj_act.osim"))
 for Musindx = 0:model.getActuators().getSize()-1
@@ -76,6 +76,17 @@ model.updBodySet().remove(curbody);
 % model.addJoint(JointWelded);
 model.initSystem();
 
+for m = 0:model.getCoordinateSet().getSize()-1
+    Coord=model.getCoordinateSet().get(m);
+    Coordname=char(Coord.getName);
+    if contains(Coordname,"CLine_")&& ~(contains(Coordname,"tx")||contains(Coordname,"tz"))
+        Coord.set_locked(true);
+    else
+        %     Coord.setDefaultValue(0);
+        Coord.set_locked(false)
+    end
+end
+model.initSystem();
 
 for i=1:1:length(Weldjoints) 
 modeljointSet=model.getJointSet();
@@ -106,7 +117,7 @@ end
 % end
 
 model.initSystem();
-model.print(append(Trc_path,Subject,"_raj_act1.osim"))
+model.print(append(Trc_path,Subject,"_raj_modified.osim"))
 
 function [data]= addingleg(data,whichleg)
 for y=1:length(data)

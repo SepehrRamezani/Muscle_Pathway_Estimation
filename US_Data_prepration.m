@@ -4,7 +4,7 @@ Basepath=Data.Basepath;
 % Data format [Frame X Y]
 Data.trialslable=[];
 MuscleName="Lateral";
-Knee0 = ["K000","K030","K060","K090","K110"];
+% Knee0 = ["K000","K030","K060","K090","K110"];
 Ankle=Data.Ankle;
 Knee=Data.Knee;
 Trial=Data.Trial;
@@ -12,7 +12,7 @@ Subject=Data.Subject;
 for S=1:length(Subject)
     US_path=append(Basepath,'\US\',Subject(S),'.xlsx');
     for K=1:length(Knee)
-        Us_Data_cell=readcell(US_path,'Sheet',Knee0(K));
+        Us_Data_cell=readcell(US_path,'Sheet',Knee(K));
         [rs,cs]=size(Us_Data_cell);
         [r,c]=find(strcmp(Us_Data_cell,'Frame'));
         if length(r)~=9
@@ -30,11 +30,15 @@ for S=1:length(Subject)
                 Us_Data_cell_trimed=[Us_Data_cell{[r(1)+1:rs],[c(counter):c(counter)+Us_Data_size(2)-1]}];
                 Us_Data_cell_trimed_reshaped=reshape(Us_Data_cell_trimed,Us_Data_size);
                 Us_Data_Mat= rmmissing(Us_Data_cell_trimed_reshaped);
-                Data.(fname).data=[Us_Data_Mat(:,1)./Data.(fname).FPS Us_Data_Mat(:,[3,4])] ;
+                if ~isempty(Us_Data_Mat)
+                    Data.(fname).data=[Us_Data_Mat(:,1)./Data.(fname).FPS Us_Data_Mat(:,[3,4])] ;
+                else
+                    Data.(fname).data=[];
+                end
             end
         end
     end
 end
-fprintf('US prepration done ...');
+fprintf('US prepration done ...\n');
 save([Basepath '\US_raw.mat'],'Data');
 end
