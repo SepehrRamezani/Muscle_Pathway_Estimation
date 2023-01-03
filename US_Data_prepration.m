@@ -1,20 +1,22 @@
-function US_Data_prepration(Data)
+function US_Data_prepration(filedata)
 %composite file with pathway coordinates
-Basepath=Data.Basepath;
+Basepath=filedata.Basepath;
 % Data format [Frame X Y]
-Data.trialslable=[];
+filedata.trialslable=[];
 MuscleName="Lateral";
 % Knee0 = ["K000","K030","K060","K090","K110"];
-Ankle=Data.Ankle;
-Knee=Data.Knee;
-Trial=Data.Trial;
-Subject=Data.Subject;
+Ankle=filedata.Ankle;
+Knee=filedata.Knee;
+Trial=filedata.Trial;
+Subject=filedata.Subject;
 for S=1:length(Subject)
     US_path=append(Basepath,'\US\',Subject(S),'.xlsx');
     for K=1:length(Knee)
         Us_Data_cell=readcell(US_path,'Sheet',Knee(K));
         [rs,cs]=size(Us_Data_cell);
         [r,c]=find(strcmp(Us_Data_cell,'Frame'));
+        [r_fps,c_fps]=find(strcmp(Us_Data_cell,'FPS'));
+        [r_x,c_x]=find(strcmp(Us_Data_cell,'X'));
         if length(r)~=9
             warning('Some trial has been lost')
         end
@@ -25,20 +27,24 @@ for S=1:length(Subject)
                 
                 counter=counter+1;
                 fname=append(Knee(K),"_",Ankle(A),"_L_",Trial(T));
-                [r_fps,c_fps]=find(strcmp(Us_Data_cell,'FPS'));
-                Data.(fname).FPS=[Us_Data_cell{r_fps(counter),c_fps(counter)+1}];
-                Us_Data_cell_trimed=[Us_Data_cell{[r(1)+1:rs],[c(counter):c(counter)+Us_Data_size(2)-1]}];
+                
+                Fps=[Us_Data_cell{r_fps(counter),c_fps(counter)+1}];
+                Data.(Subject(S)).(fname).FPS=Fps;
+                Us_Data_cell_trimed=[Us_Data_cell{[r(counter)+1:rs],[c(counter):c(counter)+Us_Data_size(2)-1]}];
                 Us_Data_cell_trimed_reshaped=reshape(Us_Data_cell_trimed,Us_Data_size);
-                Us_Data_Mat= rmmissing(Us_Data_cell_trimed_reshaped);
+                
+                Us_Data_Mat= rmmissing(Us_Data_cell_trimed_reshaped(:,[1,3,4]));
                 if ~isempty(Us_Data_Mat)
-                    Data.(fname).data=[Us_Data_Mat(:,1)./Data.(fname).FPS Us_Data_Mat(:,[3,4])] ;
+                    Data.(Subject(S)).(fname).data=[Us_Data_Mat(:,1)./Fps Us_Data_Mat(:,[2,3])] ;
                 else
-                    Data.(fname).data=[];
+                    Data.(Subject(S)).(fname).data=[];
                 end
             end
         end
     end
+    fprintf('US process of %s is done\n',Subject(S));
+
 end
-fprintf('US prepration done ...\n');
+fprintf('US_raw.mat is save in %s \n',Basepath);
 save([Basepath '\US_raw.mat'],'Data');
 end
