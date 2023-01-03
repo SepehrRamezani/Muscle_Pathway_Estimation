@@ -26,23 +26,27 @@ for K=1:length(Knee)
             if (contains(Markerset,"US5")&contains(Markerset,"US4"))
                 markdatastruct=marker_check(markdatastruct);
             end
-            MarkerData=[markdatastruct.marker_data.Time(1:jupdata:end)];
+           MarkerData=[];
             for i = 1:length(Markerset)
                 RawMarker=markdatastruct.marker_data.Markers.(Markerset{i})*RMatrix;
                 [bb,aa] = butter(2, 0.05,'low');
-                %     datafilt=filtfilt(bb,aa,MTable(:,5));
-%                 offset=rawmarker(1,:);
                 MarerDatafilt=filtfilt(bb,aa,RawMarker);
                 MarkerData =[MarkerData MarerDatafilt(1:jupdata:end,:)];
             end
             [r,c]=size(MarkerData);
+            oldFPS=markdatastruct.marker_data.Info.frequency;
             markdatastruct.marker_data.Info.frequency=newFPS;
-            markdatastruct.marker_data.Info.First_Frame=1;
-            markdatastruct.marker_data.Info.Last_Frame=r;
-            markdatastruct.marker_data.Info.NumFrames=r;
-            markdatastruct.marker_data.Info.Filename=erase(markdatastruct.marker_data.Info.Filename,'_edited');
-            
-            generate_Marker_Trc(Markerset,MarkerData,markdatastruct.marker_data.Info);
+            if markdatastruct.marker_data.Info.First_Frame>1
+             fprintf('Warning: First Time frmae of %s_%s is not 1 \n',Subject(S),fname);
+            end
+            markerinfo=markdatastruct.marker_data.Info;
+            markdatastruct.marker_data.Time= [markerinfo.First_Frame/oldFPS:(1/newFPS):markerinfo.Last_Frame/oldFPS]';
+            MarkerData=[markdatastruct.marker_data.Time MarkerData];
+            markerinfo.Last_Frame=r;
+            markerinfo.First_Frame=1;
+            markerinfo.NumFrames=markerinfo.Last_Frame-markerinfo.First_Frame;
+            markerinfo.Filename=erase(markerinfo.Filename,'_edited');
+            generate_Marker_Trc(Markerset,MarkerData,markerinfo);
             else
                  fprintf('Warning: C3d file of %s_%s was not found \n',Subject(S),fname);
             end
