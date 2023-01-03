@@ -1,17 +1,17 @@
- function [Data] = Momentarm_Calculator(Dataref)
-Basepath=Dataref.Basepath;
+ function [MCPData] = Momentarm_Calculator(filedata)
+Basepath=filedata.Basepath;
 import org.opensim.modeling.*;
 load([Basepath '\MCP_data.mat']);
-Ankle=Dataref.Ankle;
-Knee=Dataref.Knee;
-Subject=Dataref.Subject;
+Ankle=filedata.Ankle;
+Knee=filedata.Knee;
+Subject=filedata.Subject;
 for S=1:length(Subject)
-    Model_path=append(Basepath,'\Moca\',Subject,"\",Subject,"_raj.osim");
+    Model_path=append(Basepath,'\Moca\',Subject(S),"\",Subject(S),"_raj.osim");
     model=Model(Model_path);
     for K=1:length(Knee)
         for A=1:length(Ankle)
             fcoboname=append(Knee(K),"_",Ankle(A));
-            Wrapping_param=Data.(fcoboname).WrappingPar;
+            Wrapping_param=MCPData.Subject(S).(fcoboname).WrappingPar;
             wrap_r=Wrapping_param(1);
             wrap_y=-1*Wrapping_param(2);
             wrap_x=-1*Wrapping_param(3);
@@ -41,9 +41,9 @@ for S=1:length(Subject)
             model.updCoordinateSet().get(anklecoord).setValue(state, ankleangle);
             model.realizePosition(state);
             Momentarm = muscle.computeMomentArm(state, kneecoord);
-            Data.(fcoboname).Momentarm=Momentarm;
+            MCPData.Subject(S).(fcoboname).Momentarm=Momentarm;
         end
     end
 end
-save([Basepath '\Final_data.mat'],'Data');
+save([Basepath '\MomentArm_data.mat'],'MCPData');
 end

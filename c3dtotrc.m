@@ -12,12 +12,14 @@ RMatrix=[0 0 1; ...
     0 1 0];
 
 for S=1:length(Subject) 
-    Trc_path=append(filedata.Basepath,'\Moca\',Subject,'\');
+    Trc_path=append(filedata.Basepath,'\Moca\',Subject(S),'\');
 for K=1:length(Knee)
     for A=1:length(Ankle)
         for T=1:length(Trial)
             fname=append(Knee(K),"_",Ankle(A),"_L_",Trial(T));
-            markdatastruct = c3d_getdata(char(fullfile(Trc_path,append(fname,"_edited.c3d"))), 0);
+            filedir=char(fullfile(Trc_path,append(fname,".c3d")));
+            if isfile(filedir)
+            markdatastruct = c3d_getdata(filedir, 0);
             jupdata=markdatastruct.marker_data.Info.frequency/newFPS;
             Markerset=fieldnames(markdatastruct.marker_data.Markers);
             Markerset=Markerset(~contains(Markerset,'C_'));
@@ -35,11 +37,15 @@ for K=1:length(Knee)
             end
             [r,c]=size(MarkerData);
             markdatastruct.marker_data.Info.frequency=newFPS;
+            markdatastruct.marker_data.Info.First_Frame=1;
             markdatastruct.marker_data.Info.Last_Frame=r;
             markdatastruct.marker_data.Info.NumFrames=r;
             markdatastruct.marker_data.Info.Filename=erase(markdatastruct.marker_data.Info.Filename,'_edited');
             
             generate_Marker_Trc(Markerset,MarkerData,markdatastruct.marker_data.Info);
+            else
+                 fprintf('Warning: C3d file of %s_%s was not found \n',Subject(S),fname);
+            end
         end
     end
 end

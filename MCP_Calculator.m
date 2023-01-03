@@ -1,22 +1,22 @@
-function MCP_Calculator(Data)
+function MCP_Calculator(filedata)
 import org.opensim.modeling.*;
-Basepath=Data.Basepath;
+Basepath=filedata.Basepath;
 motionbasedir=append(Basepath,'\Moca\');
-Data.trial=[];
-Knee=Data.Knee;
-Ankle=Data.Ankle;
-Trial=Data.Trial;
-Subject=Data.Subject;
-Data.trial=[];
+filedata.trial=[];
+Knee=filedata.Knee;
+Ankle=filedata.Ankle;
+Trial=filedata.Trial;
+Subject=filedata.Subject;
+filedata.trial=[];
 for S=1:length(Subject)
-    motiondir=append(motionbasedir,Subject,"\");
+    Resuletdir=fullfile(Basepath,"Mucle_Center",Subject(S));
+    mkdir(Resuletdir);
+    motiondir=append(motionbasedir,Subject(S),"\");
     for K=1:length(Knee)
         for A=1:length(Ankle)
             for T=1:length(Trial)
                 fname=append(Knee(K),"_",Ankle(A),"_L_",Trial(T));
-                Resuletdir=fullfile(Basepath,"Mucle_Center",Subject);
-                mkdir(Resuletdir);
-                modeldir=append(motionbasedir,Subject,"\",Subject,"_raj_modified.osim");
+                modeldir=append(motionbasedir,Subject(S),"\",Subject(S),"_raj_modified.osim");
                 model=Model(modeldir);
                 analysis = AnalyzeTool();
                 trialdir=append(motiondir,fname,'_Combined.mot');
@@ -30,7 +30,7 @@ for S=1:length(Subject)
                     analysis.setCoordinatesFileName(trialdir);
                     analysis.setInitialTime(Stime);
                     analysis.setFinalTime(Etime);
-                    analysis.setResultsDir(fullfile(Resuletdir,append(Subject,"_",fname,"_MuscleCenter")));
+                    analysis.setResultsDir(fullfile(Resuletdir,append(Subject(S),"_",fname,"_MuscleCenter")));
                     endkinematic=PointKinematics(model);
                     endkinematic.setBody(model.getBodySet.get('Muscle_C'));
                     endkinematic.setRelativeToBody(model.getBodySet.get('tibia_l'))
@@ -42,9 +42,9 @@ for S=1:length(Subject)
                     analysis.print(append(motionbasedir,"Analyze_Setup.xml"));
                     analysis1 = AnalyzeTool(append(motionbasedir,"Analyze_Setup.xml"));
                     analysis1.run();
-                    fprintf('MCP of %s is done \n',fname);
+                    fprintf('MCP of %s_%s is done \n',Subject(S),fname);
                 else
-                    fprintf('%s was not found \n',fname);
+                    fprintf('Warning: combined of %s_%s was not found \n',Subject(S),fname);
                 end
             end
         end
