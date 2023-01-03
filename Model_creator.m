@@ -1,26 +1,29 @@
-clear all
-Pardata=importdata('C:\MyCloud\GitHub\AddresseforMusclepathwayproject.txt');
-Basepath=Pardata{1};
+function Model_creator(filedata)
 import org.opensim.modeling.*;
- myLog = JavaLogSink();
-Logger.addSink(myLog);
-Subject="p1";
+Basepath=filedata.Basepath;
+Knee=filedata.Knee;
+Ankle=filedata.Ankle;
+Trial=filedata.Trial;
+Subject=filedata.Subject;
+whichleg=filedata.whichleg;
+
 %% name of joints bodies and muscles
-whichleg="l";
+
 Weldjoints=["mtp","subtalar"];
 Weldjoints=addingleg(Weldjoints,whichleg);
 SimMusclename= ["gaslat","gasmed"];
 SimMusclename=addingleg(SimMusclename,whichleg);
 joints=["ground_pelvis","hip","walker_knee","patellofemoral","ankle","mtp","subtalar","UltraSound_tibia","Ultrasound_Plane"];
-joints(2:end)=addingleg(joints(2:end),whichleg);
+joints(2:end-1)=addingleg(joints(2:end-1),whichleg);
 Bodies=["pelvis","UltraSound","Muscle_C","femur","tibia","patella","talus","calcn","toes"];
 Bodies(4:end)=addingleg(Bodies(4:end),whichleg);
 
 %%
-Trc_path=append(Basepath,'\Moca\',Subject,'\');
-model=Model(append(Trc_path,Subject,"_raj.osim"));
+for S=1:length(Subject) 
+Trc_path=append(Basepath,'\Moca\',Subject(S),'\');
+model=Model(append(Trc_path,Subject(S),"_raj.osim"));
 
-% model.print(append(Trc_path,Subject,"_raj_act.osim"))
+% model.print(append(Trc_path,Subject(S),"_raj_act.osim"))
 for Musindx = 0:model.getActuators().getSize()-1
     frcset = model.getActuators().get(Musindx);
     if ~sum(strcmp(char(frcset.getName()), SimMusclename))
@@ -83,9 +86,12 @@ for m = 0:model.getCoordinateSet().getSize()-1
         Coord.set_locked(true);
     else
         %     Coord.setDefaultValue(0);
-        Coord.set_locked(false)
+        Coord.set_locked(false);
     end
 end
+model.getCoordinateSet().get("pelvis_tilt").setRange([1.5*-pi(),pi()])
+model.getCoordinateSet().get("pelvis_list").setRange([-pi(),pi()])
+model.getCoordinateSet().get("pelvis_rotation").setRange([1.5*-pi(),pi()/2])
 model.initSystem();
 
 for i=1:1:length(Weldjoints) 
@@ -94,13 +100,13 @@ Currjoint=modeljointSet.get(Weldjoints(i));
 CurrjointParent=Currjoint.get_frames(0);
 CurrjointChild=Currjoint.get_frames(1);
 JointWelded=WeldJoint();
-JointWelded.setName(Currjoint.getName())
-JointWelded.set_frames(0,CurrjointParent)
+JointWelded.setName(Currjoint.getName());
+JointWelded.set_frames(0,CurrjointParent);
 F1=JointWelded.get_frames(0);
 JointWelded.connectSocket_parent_frame(F1);
 JointWelded.set_frames(1,CurrjointChild)
 F2=JointWelded.get_frames(1);
-JointWelded.connectSocket_child_frame(F2)
+JointWelded.connectSocket_child_frame(F2);
 model.updJointSet().remove(Currjoint);
 model.addJoint(JointWelded);
 model.initSystem();
@@ -117,7 +123,9 @@ end
 % end
 
 model.initSystem();
-model.print(append(Trc_path,Subject,"_raj_modified.osim"))
+model.print(append(Trc_path,Subject(S),"_raj_modified.osim"));
+fprintf('Model of %s is modifed\n',Subject(S));
+end
 
 function [data]= addingleg(data,whichleg)
 for y=1:length(data)
@@ -138,4 +146,5 @@ actu.setMinControl(-1);
 actu.setMaxControl(1);
 model.addComponent(actu);
 
+end
 end
