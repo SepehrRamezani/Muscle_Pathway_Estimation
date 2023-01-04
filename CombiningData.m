@@ -17,7 +17,7 @@ for S=1:length(Subject)
                     Moca_datadir=append(Mocadir,fname,"_IK.mot");
                     if isfile(Moca_datadir)
                         Moca_data=importdata(Moca_datadir);
-                        [r_us_coordinate,c_Moca_data]=find(strncmp(Moca_data.colheaders,'CLine_t',7));
+                        [r_Moca_data,c_Moca_data]=find(strncmp(Moca_data.colheaders,'CLine_t',7));
                         Moca_data_trimed=Moca_data.data(:,c_Moca_data);
                         %%% finding the end time
                         if us(end,1)> Moca_data.data(end,1)
@@ -26,7 +26,7 @@ for S=1:length(Subject)
                             indx=1:length(us(:,1));
                         end
                         Moca_data_interpolated = interp1(Moca_data.data(:,1),Moca_data.data,us(indx,1),'linear','extrap');
-                        us_x = 1* ((us(indx,2) - 72.72)/1000);
+                        us_x = 1*((us(indx,2) - 72.72)/1000);
                         us_y = 1*((us(indx,3) - 9.28)/1000);
                         Moca_data_interpolated(:,c_Moca_data([1,3]))=[us_x,us_y];
                         combined_Data=Moca_data_interpolated;
@@ -39,7 +39,7 @@ for S=1:length(Subject)
                         Titledata = [r,c];
                         MDatadata = combined_Data;
                         makefile(Datafolder,F_fnames,Title,Titledata,Moca_data.colheaders,MDatadata,5,delimiterIn);
-                        disp(append(Subject(S),F_fnames))
+                        disp(append(Subject(S),"_",F_fnames))
                     else
                         fprintf('Ik data for  %s_%s does not exist \n',Subject(S),fname);
                     end

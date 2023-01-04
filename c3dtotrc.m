@@ -37,7 +37,7 @@ for K=1:length(Knee)
             oldFPS=markdatastruct.marker_data.Info.frequency;
             markdatastruct.marker_data.Info.frequency=newFPS;
             if markdatastruct.marker_data.Info.First_Frame>1
-             fprintf('Warning: First Time frmae of %s_%s is not 1 \n',Subject(S),fname);
+             fprintf('Warning: First Time frame of %s_%s is not 1 \n',Subject(S),fname);
             end
             markerinfo=markdatastruct.marker_data.Info;
             markdatastruct.marker_data.Time= [markerinfo.First_Frame/oldFPS:(1/newFPS):markerinfo.Last_Frame/oldFPS]';

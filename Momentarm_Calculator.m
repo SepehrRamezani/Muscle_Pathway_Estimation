@@ -13,6 +13,9 @@ for S=1:length(Subject)
             fcoboname=append(Knee(K),"_",Ankle(A));
             Wrapping_param=MCPData.Subject(S).(fcoboname).WrappingPar;
             wrap_r=Wrapping_param(1);
+%           Be aware of OpenSim axis
+%           Opensim y -> code -x
+%           Opensim x -> code -y
             wrap_y=-1*Wrapping_param(2);
             wrap_x=-1*Wrapping_param(3);
             Curbody=model.getBodySet.get('tibia_l');
