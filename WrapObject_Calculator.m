@@ -13,7 +13,8 @@ for S=1:length(Subject)
    
 
     for K=1:length(Knee)
-        kneeangle=double(erase(Knee,"K"))/180*pi();
+        %% getting muscle insertion
+        kneeangle=double(erase(Knee(K),"K"))/180*pi();
         state = model.initSystem();
         kneecoord=model.updCoordinateSet().get('knee_angle_l');
         kneecoord.setValue(state, kneeangle);
@@ -30,6 +31,7 @@ for S=1:length(Subject)
         MuMareker.changeFramePreserveLocation(state,tibibody);
         MuscinsertionNew=MuMareker.get_location();
         Mucinsertion=[MuscinsertionNew.get(0),MuscinsertionNew.get(1)];
+        %% Optimazation
         for Ank=1:length(Ankle)
             counter=counter+1;
             combo_lable=[];
@@ -57,15 +59,15 @@ for S=1:length(Subject)
             %y'' = 6ax+ 2b
             %x = (-2b)/(6a)
             ubx = (-1*coef(2))/(3*coef(1));
-            lbx = 0.1; 
+            lbx = 0.03; 
             MCP_XYZ_trimed=MCP_XYZ_Sorted(MCP_XYZ_Sorted(:,2)>=lbx,:);
 %             MCP_XYZ_trimed=MCP_XYZ_Sorted(MCP_XYZ_Sorted(:,2)<=ubx & MCP_XYZ_Sorted(:,2)>=lbx,:);
             
 %             Opensim y -> code -x
 %             Opensim x -> code -y
 
-%             insertionpoint=-1*[Mucinsertion(2),Mucinsertion(1)];
-            insertionpoint=-1*[Mucinsertion(2),0.15];
+            insertionpoint=-1*[Mucinsertion(2),Mucinsertion(1)];
+%             insertionpoint=-1*[-0.04,-0.03];
 
             fun = @(w)sseval(w,MCP_XYZ_trimed(:,2),MCP_XYZ_trimed(:,1),insertionpoint);
             x0 = [0.1;0.1;-0.05];
@@ -76,7 +78,7 @@ for S=1:length(Subject)
             Aeq = [];
             beq = [];
             lb=[0,-5,-5];
-            ub=[5,5,.1];
+            ub=[5,5,0.1];
             nonlcon=[];
             [Wrapping_param(counter,:),fval,exitflag] = fmincon(fun,x0,Aa,Bb,Aeq,beq,lb,ub,nonlcon,options);
             fval
@@ -99,8 +101,8 @@ for S=1:length(Subject)
             plot(MCP_XYZ_Sorted(:,2),MCP_XYZ_Sorted(:,1),curve_x,cruve_y);
             hold on
             plot(MCP_XYZ_trimed(:,2),MCP_XYZ_trimed(:,1));
-            plot(MCP_XYZ_trimed(:,2),Wrapping_ydata_trim,'LineWidth',1.5);
-            plot(fulltestdata,Wrapping_ydata,'LineWidth',1.5);
+            plot(MCP_XYZ_trimed(:,2),Wrapping_ydata_trim(1,:),'LineWidth',1.5);
+            plot(fulltestdata,Wrapping_ydata(1,:),'LineWidth',1.5);
             plot(insertionpoint(1),insertionpoint(2),'b*')
             legend("Rawdata","PolyLine","TrimedData","WrapObj")
             title(fname)
@@ -116,10 +118,10 @@ save([Basepath '\MCP_data.mat'],'MCPData');
         B = parm(2);
         C = parm(3);
         n = length(xdata);
-        wc=0.00001;
+        wc=0.0001;
         d=norm([B,C]-inspt)-A;
-%         d= sqrt((B-inspt(1)).^2 +(C-inspt(2)).^2)-A ;
-        %         Obj1=1/n*(sum(abs(ydata - sqrt(A.^2 - (xdata-B).^2) - C)))
+        %d= sqrt((B-inspt(1)).^2 +(C-inspt(2)).^2)-A ;
+        %Obj1=1/n*(sum(abs(ydata - sqrt(A.^2 - (xdata-B).^2) - C)))
         Obj1=1/n*(sum(abs((ydata -C).^2+(xdata-B).^2-A^2)));
         Obj2=wc*10.^((-1000).*d);
         sse =Obj1+Obj2;

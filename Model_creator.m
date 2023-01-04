@@ -11,7 +11,7 @@ whichleg=filedata.whichleg;
 
 Weldjoints=["mtp","subtalar"];
 Weldjoints=addingleg(Weldjoints,whichleg);
-SimMusclename= ["gaslat","gasmed"];
+SimMusclename= ["gaslat"];
 SimMusclename=addingleg(SimMusclename,whichleg);
 joints=["ground_pelvis","hip","walker_knee","patellofemoral","ankle","mtp","subtalar","UltraSound_tibia","Ultrasound_Plane"];
 joints(2:end-1)=addingleg(joints(2:end-1),whichleg);
