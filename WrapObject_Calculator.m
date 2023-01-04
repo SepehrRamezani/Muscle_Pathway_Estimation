@@ -1,4 +1,5 @@
 function WrapObject_Calculator(filedata)
+import org.opensim.modeling.*;
 Basepath=filedata.Basepath;
 counter=0;
 Ankle=filedata.Ankle;
@@ -6,7 +7,29 @@ Knee=filedata.Knee;
 Trial=filedata.Trial;
 Subject=filedata.Subject;
 for S=1:length(Subject)
+    %% findind muscle insertion
+    Trc_path=append(filedata.Basepath,'\Moca\',Subject(S),'\');
+    model=Model(append(Trc_path,Subject(S),"_raj_modified.osim"));
+   
+
     for K=1:length(Knee)
+        kneeangle=double(erase(Knee,"K"))/180*pi();
+        state = model.initSystem();
+        kneecoord=model.updCoordinateSet().get('knee_angle_l');
+        kneecoord.setValue(state, kneeangle);
+        model.realizePosition(state);
+        kneecoord.getValue(state);
+%         state = model.initSystem();
+        force = model.getForceSet().get('gaslat_l');
+        muscle = Millard2012EquilibriumMuscle.safeDownCast(force);
+        MuscinsertionPoint=muscle.get_GeometryPath().getPathPointSet.get(0);
+        Inslocaion=MuscinsertionPoint.getLocation(state);
+        Parntframe=MuscinsertionPoint.getParentFrame();
+        tibibody=model.getBodySet.get('tibia_l');
+        MuMareker=Marker('MU-insertion',Parntframe,Inslocaion);
+        MuMareker.changeFramePreserveLocation(state,tibibody);
+        MuscinsertionNew=MuMareker.get_location();
+        Mucinsertion=[MuscinsertionNew.get(0),MuscinsertionNew.get(1)];
         for Ank=1:length(Ankle)
             counter=counter+1;
             combo_lable=[];
@@ -34,31 +57,51 @@ for S=1:length(Subject)
             %y'' = 6ax+ 2b
             %x = (-2b)/(6a)
             ubx = (-1*coef(2))/(3*coef(1));
-            lbx = 0.03; 
+            lbx = 0.1; 
             MCP_XYZ_trimed=MCP_XYZ_Sorted(MCP_XYZ_Sorted(:,2)>=lbx,:);
 %             MCP_XYZ_trimed=MCP_XYZ_Sorted(MCP_XYZ_Sorted(:,2)<=ubx & MCP_XYZ_Sorted(:,2)>=lbx,:);
-            %         polyval(coef,x,S);
-            fun = @(w)sseval(w,MCP_XYZ_trimed(:,2),MCP_XYZ_trimed(:,1));
+            
+%             Opensim y -> code -x
+%             Opensim x -> code -y
+
+%             insertionpoint=-1*[Mucinsertion(2),Mucinsertion(1)];
+            insertionpoint=-1*[Mucinsertion(2),0.15];
+
+            fun = @(w)sseval(w,MCP_XYZ_trimed(:,2),MCP_XYZ_trimed(:,1),insertionpoint);
             x0 = [0.1;0.1;-0.05];
-            options = optimset('MaxFunEvals',100000,'MaxIter',100000,'TolFun',1e-10);
-            [Wrapping_param(counter,:),fval,exitflag] = fminsearch(fun,x0,options);
+            options = optimoptions('fmincon','ConstraintTolerance',1e-9,'MaxIterations',1e8);
+%             options = optimoptions();
+            Aa = [];
+            Bb = [];
+            Aeq = [];
+            beq = [];
+            lb=[0,-5,-5];
+            ub=[5,5,.1];
+            nonlcon=[];
+            [Wrapping_param(counter,:),fval,exitflag] = fmincon(fun,x0,Aa,Bb,Aeq,beq,lb,ub,nonlcon,options);
+            fval
             r=Wrapping_param(counter,1);
-            y=Wrapping_param(counter,2);
-            x=Wrapping_param(counter,3);
+%           Base of opensim axis
+            xc=Wrapping_param(counter,2);
+            yc=Wrapping_param(counter,3);
             if exitflag
-                fprintf('Wrap Object parameters of %s is r=%3.4f y=%3.4f x=%3.4f \n',fname,r,y,x);
+                fprintf('Wrap Object parameters of %s is r=%3.4f y=%3.4f x=%3.4f \n',fname,r,yc,xc);
             else
-                fprintf('Warning: Wrap Object of %s has not found best answer is r=%3.4f y=%3.4f x=%3.4f \n',fname,r,y,x);
+                fprintf('Warning: Wrap Object of %s has not found best answer is r=%3.4f y=%3.4f x=%3.4f \n',fname,r,yc,xc);
             end
             fig=figure;
             fig.Position(1)=-1800;
             fig.Position(3:4)=[1600,400];
             MCPData.(Subject(S)).(fcoboname).WrappingPar = Wrapping_param(counter,:);
-            Wrapping_ydata=CurveFun(Wrapping_param(counter,:),MCP_XYZ_trimed(:,2));
+            fulltestdata=linspace(xc-r,xc+r,120);
+            Wrapping_ydata=CurveFun(Wrapping_param(counter,:),fulltestdata);
+            Wrapping_ydata_trim=CurveFun(Wrapping_param(counter,:),MCP_XYZ_trimed(:,2));
             plot(MCP_XYZ_Sorted(:,2),MCP_XYZ_Sorted(:,1),curve_x,cruve_y);
             hold on
             plot(MCP_XYZ_trimed(:,2),MCP_XYZ_trimed(:,1));
-            plot(MCP_XYZ_trimed(:,2),Wrapping_ydata,'LineWidth',1.5);
+            plot(MCP_XYZ_trimed(:,2),Wrapping_ydata_trim,'LineWidth',1.5);
+            plot(fulltestdata,Wrapping_ydata,'LineWidth',1.5);
+            plot(insertionpoint(1),insertionpoint(2),'b*')
             legend("Rawdata","PolyLine","TrimedData","WrapObj")
             title(fname)
             hold off
@@ -68,17 +111,24 @@ for S=1:length(Subject)
 end
 save([Basepath '\MCP_data.mat'],'MCPData');
 
-    function sse = sseval(parm,xdata,ydata)
+    function sse = sseval(parm,xdata,ydata,inspt)
         A = parm(1);
         B = parm(2);
         C = parm(3);
         n = length(xdata);
-        sse = 1/n*sum(abs(ydata - sqrt(A.^2 - (xdata-B).^2) - C));
+        wc=0.00001;
+        d=norm([B,C]-inspt)-A;
+%         d= sqrt((B-inspt(1)).^2 +(C-inspt(2)).^2)-A ;
+        %         Obj1=1/n*(sum(abs(ydata - sqrt(A.^2 - (xdata-B).^2) - C)))
+        Obj1=1/n*(sum(abs((ydata -C).^2+(xdata-B).^2-A^2)));
+        Obj2=wc*10.^((-1000).*d);
+        sse =Obj1+Obj2;
     end
     function ydata = CurveFun(parm,xdata)
         A = parm(1);
         B = parm(2);
         C = parm(3);
-        ydata = sqrt(A.^2-(xdata-B).^2)+C;
+        ydata(1,:) = sqrt(A.^2-(xdata-B).^2)+C;
+        ydata(2,:)= -sqrt(A.^2-(xdata-B).^2)+C;
     end
 end
