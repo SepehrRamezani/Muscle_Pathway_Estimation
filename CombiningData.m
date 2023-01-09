@@ -36,7 +36,7 @@ for S=1:length(filedata.trialas)
                         Titledata = [r,c];
                         MDatadata = combined_Data;
                         makefile(Datafolder,F_fnames,Title,Titledata,Moca_data.colheaders,MDatadata,5,delimiterIn);
-                        disp(append(Subject(S),"_",F_fnames))
+                        disp(append(Subject,"_",F_fnames))
                     else
                         fprintf('Ik data for  %s does not exist \n',fullname);
                     end

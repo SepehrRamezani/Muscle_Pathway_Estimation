@@ -43,7 +43,7 @@ for S=1:length(fcoboname)
                 MCP_XYZ_Data_Combined=[MCP_XYZ_Data_Combined;MCP_Data.data(:,[2:4])];
                 MCPData.(fcoboname(S)).data = MCP_Data.data(:,[2:4]);
             else
-                fprintf('Warning Data of %s was not found \n',fname);
+                fprintf('Warning: Combined data of %s was not found \n',fname);
             end
         end
 %             fcoboname=append(Knee(K),"_",Ankle(Ank));

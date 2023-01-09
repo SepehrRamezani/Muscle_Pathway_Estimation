@@ -15,9 +15,9 @@ filedata.whichleg="l";
 % Knee = ["K0","K30","K60","K90","K110"];
 Knee = ["K30","K60"];
 % Ankle = ["0","D10","P30"];
-Ankle = ["0"];
+Ankle = ["0","D10"];
 % Trial = ["1","2","3"];
-Trial = ["1","3"];
+Trial = ["1","2","3"];
 trials=[];
 for S=1:length(Subject)
     for K=1:length(Knee)
@@ -38,9 +38,9 @@ filedata.trialas=trials;
 % Model_creator(filedata)
 % Running_IK(filedata);
 % CombiningData(filedata);
-% MCP_Calculator(filedata);
-WrapObject_Calculator(filedata);
-FinalData=Momentarm_Calculator(filedata);
+MCP_Calculator(filedata);
+% WrapObject_Calculator(filedata);
+% FinalData=Momentarm_Calculator(filedata);
 diary off
 function [filedata] = makingcombo(filedata)
 fcoboname=[];
