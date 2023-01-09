@@ -1,10 +1,6 @@
 function Model_creator(filedata)
 import org.opensim.modeling.*;
 Basepath=filedata.Basepath;
-Knee=filedata.Knee;
-Ankle=filedata.Ankle;
-Trial=filedata.Trial;
-Subject=filedata.Subject;
 whichleg=filedata.whichleg;
 
 %% name of joints bodies and muscles
@@ -19,9 +15,17 @@ Bodies=["pelvis","UltraSound","Muscle_C","femur","tibia","patella","talus","calc
 Bodies(4:end)=addingleg(Bodies(4:end),whichleg);
 
 %%
-for S=1:length(Subject) 
-Trc_path=append(Basepath,'\Moca\',Subject(S),'\');
-model=Model(append(Trc_path,Subject(S),"_raj.osim"));
+Subject=[];
+for S=1:length(filedata.trialas) 
+    trial_name=char(filedata.trialas(S));
+    indxuderline=strfind(trial_name,'_');
+    s=trial_name(1:indxuderline(1)-1);
+    Subject=addfun(Subject,s);
+end
+
+for S=1:length(Subject)    
+    Trc_path=append(Basepath,'\Moca\',Subject(S),'\');
+    model=Model(append(Trc_path,Subject(S),"_raj.osim"));
 
 % model.print(append(Trc_path,Subject(S),"_raj_act.osim"))
 for Musindx = 0:model.getActuators().getSize()-1
@@ -46,7 +50,6 @@ for jo = 0:1:jonames.getSize()-1
         curjoint=model.getJointSet.get(jonames.get(jo));
         model.updJointSet().remove(curjoint);
     else
-   
     end
 end
 %% Configure Bodies
@@ -146,5 +149,16 @@ actu.setMinControl(-1);
 actu.setMaxControl(1);
 model.addComponent(actu);
 
+end
+function [filedata] = addfun(filedata,info)
+info=string(info);
+if ~isempty(filedata)
+    if ~sum(contains(filedata,info))
+        
+        filedata=[filedata,info];
+    end
+else
+    filedata=info;
+end
 end
 end

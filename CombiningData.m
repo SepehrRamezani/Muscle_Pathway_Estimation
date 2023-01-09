@@ -1,18 +1,15 @@
 function CombiningData(filedata)
 Basepath=filedata.Basepath;
 load([Basepath '\US_raw.mat']);
-Knee=filedata.Knee;
-Ankle=filedata.Ankle;
-Trial=filedata.Trial;
-Subject=filedata.Subject;
-filedata.trial=[];
-for S=1:length(Subject)
-    Mocadir = append(Basepath,'\Moca\',Subject(S),'\');
-    for K=1:length(Knee)
-        for A=1:length(Ankle)
-            for T=1:length(Trial)
-                fname=append(Knee(K),"_",Ankle(A),"_L_",Trial(T));
-                us=Data.(Subject(S)).(fname).data;
+
+for S=1:length(filedata.trialas) 
+            trial_name=char(filedata.trialas(S));
+            indxuderline=strfind(trial_name,'_');
+            Subject=trial_name(1:indxuderline(1)-1);
+            fname=erase(trial_name,append(Subject,"_"));
+            fullname=filedata.trialas(S);
+            Mocadir = append(Basepath,'\Moca\',Subject,'\');
+            us=Data.(Subject).(fname).data;
                 if ~isempty(us)
                     Moca_datadir=append(Mocadir,fname,"_IK.mot");
                     if isfile(Moca_datadir)
@@ -41,14 +38,12 @@ for S=1:length(Subject)
                         makefile(Datafolder,F_fnames,Title,Titledata,Moca_data.colheaders,MDatadata,5,delimiterIn);
                         disp(append(Subject(S),"_",F_fnames))
                     else
-                        fprintf('Ik data for  %s_%s does not exist \n',Subject(S),fname);
+                        fprintf('Ik data for  %s does not exist \n',fullname);
                     end
                 else
-                    fprintf('Ultrasound data for  %s_%s does not exist \n',Subject(S),fname);
+                    fprintf('Ultrasound data for  %s does not exist \n',fullname);
                 end
-            end
-        end
-    end
+
 end
 end
 
