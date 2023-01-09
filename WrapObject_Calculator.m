@@ -2,19 +2,19 @@ function WrapObject_Calculator(filedata)
 import org.opensim.modeling.*;
 Basepath=filedata.Basepath;
 counter=0;
-Ankle=filedata.Ankle;
-Knee=filedata.Knee;
-Trial=filedata.Trial;
-Subject=filedata.Subject;
-for S=1:length(Subject)
-    %% findind muscle insertion
-    Trc_path=append(filedata.Basepath,'\Moca\',Subject(S),'\');
-    model=Model(append(Trc_path,Subject(S),"_raj_modified.osim"));
-   
+Subject=[];
+fcoboname=filedata.fcoboname;
 
-    for K=1:length(Knee)
-        %% getting muscle insertion
-        kneeangle=double(erase(Knee(K),"K"))/180*pi();
+for S=1:length(fcoboname) 
+    trial_name=char(fcoboname(S));
+    indxuderline=strfind(trial_name,'_');
+    Subject=trial_name(1:indxuderline(1)-1);
+    Knee=string(trial_name(indxuderline(1)+1:indxuderline(2)-1));
+    %% findind muscle insertion
+    Trc_path=append(filedata.Basepath,'\Moca\',Subject,'\');
+    model=Model(append(Trc_path,Subject,"_raj_modified.osim"));
+    %% getting muscle insertion
+    kneeangle=double(erase(Knee,"K"))/180*pi();
         state = model.initSystem();
         kneecoord=model.updCoordinateSet().get('knee_angle_l');
         kneecoord.setValue(state, kneeangle);
@@ -32,23 +32,22 @@ for S=1:length(Subject)
         MuscinsertionNew=MuMareker.get_location();
         Mucinsertion=[MuscinsertionNew.get(0),MuscinsertionNew.get(1)];
         %% Optimazation
-        for Ank=1:length(Ankle)
-            counter=counter+1;
-            combo_lable=[];
-            MCP_XYZ_Data_Combined=[];
-            for T=1:length(Trial)
-                fname=append(Knee(K),"_",Ankle(Ank),"_L_",Trial(T));
-                datadir=append(Basepath,"\Mucle_Center\",Subject(S),"\",Subject(S),"_",fname,"_MuscleCenter\",fname,"_PointKinematics_MUCE_pos.sto");
-                if isfile(datadir)
-                    MCP_Data=importdata(datadir);
-                    MCP_XYZ_Data_Combined=[MCP_XYZ_Data_Combined;MCP_Data.data(:,[2:4])];
-                    MCPData.Subject(S).(fname).data = MCP_Data.data(:,[2:4]);
-                else
-                    fprintf('Warning Data of %s_%s was not found \n',Subject(S),fname);
-                end
+        counter=counter+1;
+        combo_lable=[];
+        MCP_XYZ_Data_Combined=[];
+        for T=1:3
+            fname=append(erase(trial_name,append(Subject,"_")),"_L_",string(T));
+            datadir=append(Basepath,"\Mucle_Center\",Subject,"\",fcoboname(S),"_L_",string(T),"_MuscleCenter\",fname,"_PointKinematics_MUCE_pos.sto");
+            if isfile(datadir)
+                MCP_Data=importdata(datadir);
+                MCP_XYZ_Data_Combined=[MCP_XYZ_Data_Combined;MCP_Data.data(:,[2:4])];
+                MCPData.(fcoboname(S)).data = MCP_Data.data(:,[2:4]);
+            else
+                fprintf('Warning Data of %s was not found \n',fname);
             end
-            fcoboname=append(Knee(K),"_",Ankle(Ank));
-            MCPData.Subject(S).(fcoboname).data = MCP_XYZ_Data_Combined;
+        end
+%             fcoboname=append(Knee(K),"_",Ankle(Ank));
+            MCPData.(fcoboname(S)).data = MCP_XYZ_Data_Combined;
             % For visualizing purpose the x data is flipped
             Flipped_MCP_XYZ_Data_Combined=-1*MCP_XYZ_Data_Combined;
             [MCP_XYZ_Sorted, o] = sortrows(Flipped_MCP_XYZ_Data_Combined,2);
@@ -59,7 +58,7 @@ for S=1:length(Subject)
             %y'' = 6ax+ 2b
             %x = (-2b)/(6a)
             ubx = (-1*coef(2))/(3*coef(1));
-            lbx = 0.03; 
+            lbx = 0.0; 
             MCP_XYZ_trimed=MCP_XYZ_Sorted(MCP_XYZ_Sorted(:,2)>=lbx,:);
 %             MCP_XYZ_trimed=MCP_XYZ_Sorted(MCP_XYZ_Sorted(:,2)<=ubx & MCP_XYZ_Sorted(:,2)>=lbx,:);
             
@@ -80,24 +79,23 @@ for S=1:length(Subject)
             lb=[0,-5,-5];
             ub=[5,5,0.1];
             nonlcon=[];
-            [Wrapping_param(counter,:),fval,exitflag] = fmincon(fun,x0,Aa,Bb,Aeq,beq,lb,ub,nonlcon,options);
-            fval
-            r=Wrapping_param(counter,1);
+            [Wrapping_param,fval,exitflag] = fmincon(fun,x0,Aa,Bb,Aeq,beq,lb,ub,nonlcon,options);
+            r=Wrapping_param(1);
 %           Base of opensim axis
-            xc=Wrapping_param(counter,2);
-            yc=Wrapping_param(counter,3);
+            xc=Wrapping_param(2);
+            yc=Wrapping_param(3);
             if exitflag
-                fprintf('Wrap Object parameters of %s is r=%3.4f y=%3.4f x=%3.4f \n',fname,r,yc,xc);
+                fprintf('Wrap Object parameters of %s is r=%3.4f y=%3.4f x=%3.4f \n',fcoboname(S),r,yc,xc);
             else
-                fprintf('Warning: Wrap Object of %s has not found best answer is r=%3.4f y=%3.4f x=%3.4f \n',fname,r,yc,xc);
+                fprintf('Warning: Wrap Object of %s has not found best answer is r=%3.4f y=%3.4f x=%3.4f \n',fcoboname(S),r,yc,xc);
             end
             fig=figure;
             fig.Position(1)=-1800;
             fig.Position(3:4)=[1600,400];
-            MCPData.(Subject(S)).(fcoboname).WrappingPar = Wrapping_param(counter,:);
+            MCPData.(fcoboname(S)).WrappingPar = Wrapping_param;
             fulltestdata=linspace(xc-r,xc+r,120);
-            Wrapping_ydata=CurveFun(Wrapping_param(counter,:),fulltestdata);
-            Wrapping_ydata_trim=CurveFun(Wrapping_param(counter,:),MCP_XYZ_trimed(:,2));
+            Wrapping_ydata=CurveFun(Wrapping_param,fulltestdata);
+            Wrapping_ydata_trim=CurveFun(Wrapping_param,MCP_XYZ_trimed(:,2));
             plot(MCP_XYZ_Sorted(:,2),MCP_XYZ_Sorted(:,1),curve_x,cruve_y);
             hold on
             plot(MCP_XYZ_trimed(:,2),MCP_XYZ_trimed(:,1));
@@ -105,11 +103,11 @@ for S=1:length(Subject)
             plot(fulltestdata,Wrapping_ydata(1,:),'LineWidth',1.5);
             plot(insertionpoint(1),insertionpoint(2),'b*')
             legend("Rawdata","PolyLine","TrimedData","WrapObj")
-            title(fname)
+            title(fcoboname(S))
             hold off
              
-        end
-    end
+%         end
+    
 end
 save([Basepath '\MCP_data.mat'],'MCPData');
 
@@ -133,4 +131,5 @@ save([Basepath '\MCP_data.mat'],'MCPData');
         ydata(1,:) = sqrt(A.^2-(xdata-B).^2)+C;
         ydata(2,:)= -sqrt(A.^2-(xdata-B).^2)+C;
     end
+    
 end

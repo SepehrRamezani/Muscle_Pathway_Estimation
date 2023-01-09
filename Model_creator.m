@@ -150,15 +150,4 @@ actu.setMaxControl(1);
 model.addComponent(actu);
 
 end
-function [filedata] = addfun(filedata,info)
-info=string(info);
-if ~isempty(filedata)
-    if ~sum(contains(filedata,info))
-        
-        filedata=[filedata,info];
-    end
-else
-    filedata=info;
-end
-end
 end

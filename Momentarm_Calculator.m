@@ -2,16 +2,21 @@
 Basepath=filedata.Basepath;
 import org.opensim.modeling.*;
 load([Basepath '\MCP_data.mat']);
-Ankle=filedata.Ankle;
-Knee=filedata.Knee;
-Subject=filedata.Subject;
-for S=1:length(Subject)
-    Model_path=append(Basepath,'\Moca\',Subject(S),"\",Subject(S),"_raj.osim");
-    model=Model(Model_path);
-    for K=1:length(Knee)
-        for A=1:length(Ankle)
-            fcoboname=append(Knee(K),"_",Ankle(A));
-            Wrapping_param=MCPData.Subject(S).(fcoboname).WrappingPar;
+fcoboname=filedata.fcoboname;
+Model_path="";
+for S=1:length(fcoboname)
+    trial_name=char(fcoboname(S));
+    indxuderline=strfind(trial_name,'_');
+    Subject=trial_name(1:indxuderline(1)-1);
+    Model_path_new=append(Basepath,'\Moca\',Subject,"\",Subject,"_raj.osim");
+    Knee=string(trial_name(indxuderline(1)+1:indxuderline(2)-1));
+    Ankle=string(trial_name(indxuderline(2)+1:end));
+    if ~contains(Model_path,Model_path_new)
+        Model_path=Model_path_new;
+        model=Model(Model_path);
+    end
+ 
+            Wrapping_param=MCPData.(fcoboname(S)).WrappingPar;
             wrap_r=Wrapping_param(1);
 %           Be aware of OpenSim axis
 %           Opensim y -> code -x
@@ -26,11 +31,11 @@ for S=1:length(Subject)
             wrap_z=CylinderWrapobj.get_translation().get(2);
             CylinderWrapobj.set_translation(Vec3(wrap_x,wrap_y,wrap_z));
             model.initSystem();
-            kneeangle= double(erase(Knee(K),"K"));
-            if contains(Ankle(A),"P")
-                ankleangle=-1*double(erase(Ankle(A),"P"));
+            kneeangle= double(erase(Knee,"K"));
+            if contains(Ankle,"P")
+                ankleangle=-1*double(erase(Ankle,"P"));
             else
-                ankleangle=1*double(erase(Ankle(A),"D"));
+                ankleangle=1*double(erase(Ankle,"D"));
             end
             
             Musclename='gaslat_l';
@@ -44,9 +49,8 @@ for S=1:length(Subject)
             model.updCoordinateSet().get(anklecoord).setValue(state, ankleangle);
             model.realizePosition(state);
             Momentarm = muscle.computeMomentArm(state, kneecoord);
-            MCPData.Subject(S).(fcoboname).Momentarm=Momentarm;
-        end
-    end
+            MCPData.(fcoboname(S)).Momentarm=Momentarm;
+    
 end
 save([Basepath '\MomentArm_data.mat'],'MCPData');
 end

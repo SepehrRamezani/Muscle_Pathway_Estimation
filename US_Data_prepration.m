@@ -58,15 +58,4 @@ for S=1:length(Subject)
 end
 fprintf('US_raw.mat is save in %s \n',Basepath);
 save([Basepath '\US_raw.mat'],'Data');
-function [filedata] = addfun(filedata,info)
-info=string(info);
-if ~isempty(filedata)
-    if ~sum(contains(filedata,info))
-        
-        filedata=[filedata,info];
-    end
-else
-    filedata=info;
-end
-end
 end
