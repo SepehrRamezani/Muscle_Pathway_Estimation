@@ -10,7 +10,7 @@ for S=1:length(filedata.trialas)
             fname=erase(trial_name,append(Subject,"_"));
             fullname=filedata.trialas(S);
             Resuletdir=fullfile(Basepath,"Mucle_Center",Subject);
-            mkdir(Resuletdir);
+            [q,w]=mkdir(Resuletdir);
             motiondir=append(motionbasedir,Subject,"\");
             modeldir=append(motionbasedir,Subject,"\",Subject,"_raj_modified.osim");
             model=Model(modeldir);
