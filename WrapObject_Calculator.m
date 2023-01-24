@@ -2,35 +2,54 @@ function WrapObject_Calculator(filedata)
 import org.opensim.modeling.*;
 Basepath=filedata.Basepath;
 counter=0;
+plotflage=0;
 Subject=[];
 fcoboname=filedata.fcoboname;
-
+load([Basepath '\MCP_data.mat'])
 for S=1:length(fcoboname) 
     trial_name=char(fcoboname(S));
     indxuderline=strfind(trial_name,'_');
     Subject=trial_name(1:indxuderline(1)-1);
     Knee=string(trial_name(indxuderline(1)+1:indxuderline(2)-1));
+    Ankle=string(trial_name(indxuderline(2)+1:end));
     %% findind muscle insertion
     Trc_path=append(filedata.Basepath,'\Moca\',Subject,'\');
     model=Model(append(Trc_path,Subject,"_raj_modified.osim"));
-    %% getting muscle insertion
-    kneeangle=double(erase(Knee,"K"))/180*pi();
+    %% getting muscle insertions
+    kneeangle=deg2rad(double(erase(Knee,"K")));
+    if contains(Ankle,"P")
+        ankleangle=-1*deg2rad(double(erase(Ankle,"P")));
+    else
+        ankleangle=1*deg2rad(double(erase(Ankle,"D")));
+    end
         state = model.initSystem();
-        kneecoord=model.updCoordinateSet().get('knee_angle_l');
-        kneecoord.setValue(state, kneeangle);
+        tibibody=model.getBodySet.get('tibia_l');
+        Kneecoord=model.updCoordinateSet().get('knee_angle_l');
+        Anklecoord=model.updCoordinateSet().get('ankle_angle_l');
+        Kneecoord.setValue(state, kneeangle);
+        Anklecoord.setValue(state, ankleangle);
         model.realizePosition(state);
-        kneecoord.getValue(state);
+        Kneecoord.getValue(state);
 %         state = model.initSystem();
         force = model.getForceSet().get('gaslat_l');
         muscle = Millard2012EquilibriumMuscle.safeDownCast(force);
+%         start point
         MuscinsertionPoint=muscle.get_GeometryPath().getPathPointSet.get(0);
-        Inslocaion=MuscinsertionPoint.getLocation(state);
-        Parntframe=MuscinsertionPoint.getParentFrame();
-        tibibody=model.getBodySet.get('tibia_l');
-        MuMareker=Marker('MU-insertion',Parntframe,Inslocaion);
-        MuMareker.changeFramePreserveLocation(state,tibibody);
-        MuscinsertionNew=MuMareker.get_location();
-        Mucinsertion=[MuscinsertionNew.get(0),MuscinsertionNew.get(1)];
+        SInslocaion=MuscinsertionPoint.getLocation(state);
+        SParntframe=MuscinsertionPoint.getParentFrame();
+        SMuMareker=Marker('MU-insertion',SParntframe,SInslocaion);
+        SMuMareker.changeFramePreserveLocation(state,tibibody);
+        SMuscinsertionNew=SMuMareker.get_location();
+        SMucinsertion=[SMuscinsertionNew.get(0),SMuscinsertionNew.get(1)];
+%         end point
+        MuscinsertionPoint=muscle.get_GeometryPath().getPathPointSet.get(1);
+        EInslocaion=MuscinsertionPoint.getLocation(state);
+        EParntframe=MuscinsertionPoint.getParentFrame();
+        EMuMareker=Marker('MU-insertion',EParntframe,EInslocaion);
+        EMuMareker.changeFramePreserveLocation(state,tibibody);
+        EMuscinsertionNew=EMuMareker.get_location();
+        EMucinsertion=[EMuscinsertionNew.get(0),EMuscinsertionNew.get(1)];
+        
         %% Optimazation
         counter=counter+1;
         combo_lable=[];
@@ -41,9 +60,9 @@ for S=1:length(fcoboname)
             if isfile(datadir)
                 MCP_Data=importdata(datadir);
                 MCP_XYZ_Data_Combined=[MCP_XYZ_Data_Combined;MCP_Data.data(:,[2:4])];
-                MCPData.(fcoboname(S)).data = MCP_Data.data(:,[2:4]);
+%                 MCPData.(fcoboname(S)).data = MCP_Data.data(:,[2:4]);
             else
-                fprintf('Warning: Combined data of %s was not found \n',fname);
+                fprintf('Warning: MCP of %s was not found \n',fname);
             end
         end
 %             fcoboname=append(Knee(K),"_",Ankle(Ank));
@@ -65,10 +84,10 @@ for S=1:length(fcoboname)
 %             Opensim y -> code -x
 %             Opensim x -> code -y
 
-            insertionpoint=-1*[Mucinsertion(2),Mucinsertion(1)];
+            insertionpoints=-1*[SMucinsertion(2),SMucinsertion(1);EMucinsertion(2),EMucinsertion(1)];
 %             insertionpoint=-1*[-0.04,-0.03];
 
-            fun = @(w)sseval(w,MCP_XYZ_trimed(:,2),MCP_XYZ_trimed(:,1),insertionpoint);
+            fun = @(w)sseval(w,MCP_XYZ_trimed(:,2),MCP_XYZ_trimed(:,1),insertionpoints);
             x0 = [0.1;0.1;-0.05];
             options = optimoptions('fmincon','ConstraintTolerance',1e-9,'MaxIterations',1e8);
 %             options = optimoptions();
@@ -76,12 +95,12 @@ for S=1:length(fcoboname)
             Bb = [];
             Aeq = [];
             beq = [];
-            lb=[0,-5,-5];
-            ub=[5,5,0.1];
+            lb=[0,-1,-1];
+            ub=[1,1,0.1];
             nonlcon=[];
             [Wrapping_param,fval,exitflag] = fmincon(fun,x0,Aa,Bb,Aeq,beq,lb,ub,nonlcon,options);
             r=Wrapping_param(1);
-%           Base of opensim axis
+%           Base of plot axis
             xc=Wrapping_param(2);
             yc=Wrapping_param(3);
             if exitflag
@@ -89,40 +108,46 @@ for S=1:length(fcoboname)
             else
                 fprintf('Warning: Wrap Object of %s has not found best answer is r=%3.4f y=%3.4f x=%3.4f \n',fcoboname(S),r,yc,xc);
             end
-            fig=figure;
-            fig.Position(1)=-1800;
-            fig.Position(3:4)=[1600,400];
+            
             MCPData.(fcoboname(S)).WrappingPar = Wrapping_param;
             fulltestdata=linspace(xc-r,xc+r,120);
             Wrapping_ydata=CurveFun(Wrapping_param,fulltestdata);
             Wrapping_ydata_trim=CurveFun(Wrapping_param,MCP_XYZ_trimed(:,2));
+            if plotflage
+            fig=figure;
+            fig.Position(1)=-1800;
+            fig.Position(3:4)=[1600,400];
             plot(MCP_XYZ_Sorted(:,2),MCP_XYZ_Sorted(:,1),curve_x,cruve_y);
             hold on
             plot(MCP_XYZ_trimed(:,2),MCP_XYZ_trimed(:,1));
             plot(MCP_XYZ_trimed(:,2),Wrapping_ydata_trim(1,:),'LineWidth',1.5);
             plot(fulltestdata,Wrapping_ydata(1,:),'LineWidth',1.5);
-            plot(insertionpoint(1),insertionpoint(2),'b*')
+            plot(insertionpoints(:,1),insertionpoints(:,2),'b*')
             legend("Rawdata","PolyLine","TrimedData","WrapObj")
             title(fcoboname(S))
             hold off
+            end
              
 %         end
     
 end
 save([Basepath '\MCP_data.mat'],'MCPData');
 
-    function sse = sseval(parm,xdata,ydata,inspt)
+    function sse = sseval(parm,xdata,ydata,inspts)
         A = parm(1);
         B = parm(2);
         C = parm(3);
         n = length(xdata);
-        wc=0.0001;
-        d=norm([B,C]-inspt)-A;
+        wc1=0.0001;
+        wc2=0.0001;
+        d1=norm([B,C]-inspts(1,:))-A;
+        d2=norm([B,C]-inspts(2,:))-A;
         %d= sqrt((B-inspt(1)).^2 +(C-inspt(2)).^2)-A ;
         %Obj1=1/n*(sum(abs(ydata - sqrt(A.^2 - (xdata-B).^2) - C)))
         Obj1=1/n*(sum(abs((ydata -C).^2+(xdata-B).^2-A^2)));
-        Obj2=wc*10.^((-1000).*d);
-        sse =Obj1+Obj2;
+        Obj2=wc1*10.^((-1000).*d1);
+        Obj3=wc2*10.^((-1000).*d2);
+        sse =Obj1+Obj2+Obj3;
     end
     function ydata = CurveFun(parm,xdata)
         A = parm(1);
