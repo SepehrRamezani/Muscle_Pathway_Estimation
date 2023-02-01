@@ -1,4 +1,4 @@
- function [MCPData] = Momentarm_Calculator(filedata)
+ function [MomentarmData] = Momentarm_Calculator(filedata)
  
 Basepath=filedata.Basepath;
 import org.opensim.modeling.*;
@@ -6,6 +6,7 @@ load([Basepath '\MCP_data.mat']);
 load([Basepath '\MomentArm_data.mat']);
 fcoboname=filedata.fcoboname;
 Model_path="";
+MomentarmData=MCPData;
 for S=1:length(fcoboname)
     trial_name=char(fcoboname(S));
     indxuderline=strfind(trial_name,'_');
@@ -75,9 +76,11 @@ for S=1:length(fcoboname)
             Anklecoord.setDefaultValue(ankleangle);
             model.setName(append(fcoboname(S),"_raj_Wrp_Opt.osim"));
             model.print(fullfile(model_folder,'WrOptmodel',append(fcoboname(S),"_raj_Wrp_Opt.osim")));
-            MomentarmData=MCPData;
+            
             MomentarmData.(fcoboname(S)).Momentarm=Momentarm;
-    
+            MomentarmData.staticdata(S,1)=Momentarm;
+            MomentarmData.staticdatalable(S,1)=fcoboname(S);
+            
 end
 save([Basepath '\MomentArm_data.mat'],'MomentarmData');
 end
