@@ -41,6 +41,7 @@ filedata.trialas=trials;
 % MCP_Calculator(filedata);
 % WrapObject_Calculator(filedata);
 FinalData=Momentarm_Calculator(filedata);
+GFinalData=GenModel_Momentarm_Calculator_extraxction(filedata);
 diary off
 function [filedata] = makingcombo(filedata)
 fcoboname=[];
