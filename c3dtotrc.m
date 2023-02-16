@@ -80,7 +80,6 @@ for S=1:length(filedata.trialas)
             markerinfo.Last_Frame=r;
             markerinfo.First_Frame=1;
             markerinfo.NumFrames=markerinfo.Last_Frame-markerinfo.First_Frame;
-            markerinfo.Filename=erase(markerinfo.Filename,'_edited');
             generate_Marker_Trc(Markersetnew,MarkerData_newFPS,markerinfo);
             else
                  fprintf('Warning: C3d file of %s was not found \n',fullname);
